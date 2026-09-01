@@ -590,7 +590,6 @@ export default function CalendarApp() {
             navLinks={false}
             multiMonthMaxColumns={4}
             multiMonthMinWidth={210}
-            dayMinWidth={110}
             slotMinTime="00:00:00"
             slotMaxTime="24:00:00"
             slotDuration="01:00:00"
