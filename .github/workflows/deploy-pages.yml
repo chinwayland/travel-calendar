@@ -4,8 +4,6 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
-  schedule:
-    - cron: '7,22,37,52 * * * *'
 
 permissions:
   contents: read
@@ -61,7 +59,7 @@ jobs:
       - name: Build static site
         env:
           NEXT_PUBLIC_BASE_PATH: /${{ github.event.repository.name }}
-          NEXT_PUBLIC_SITE_URL: https://www.waylandchin.com/${{ github.event.repository.name }}
+          NEXT_PUBLIC_SITE_URL: https://waylandchin.com/${{ github.event.repository.name }}
         run: pnpm build
 
       - name: Prepare GitHub Pages folder
