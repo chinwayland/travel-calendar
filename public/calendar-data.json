@@ -1,0 +1,15 @@
+{
+  "generatedAt": "2026-08-31T12:00:00.000Z",
+  "source": "Preview",
+  "isSample": true,
+  "eventCount": 7,
+  "events": [
+    { "id": "preview-1", "title": "Flight to Singapore", "start": "2026-08-31T05:30:00.000Z", "end": "2026-08-31T09:15:00.000Z", "allDay": false, "location": "Istanbul Airport" },
+    { "id": "preview-2", "title": "Marina Bay Hotel", "start": "2026-08-31", "end": "2026-09-04", "allDay": true, "location": "Singapore" },
+    { "id": "preview-3", "title": "Dinner in Tiong Bahru", "start": "2026-09-01T11:00:00.000Z", "end": "2026-09-01T13:00:00.000Z", "allDay": false, "location": "Tiong Bahru, Singapore" },
+    { "id": "preview-4", "title": "Gardens by the Bay", "start": "2026-09-02T02:00:00.000Z", "end": "2026-09-02T05:00:00.000Z", "allDay": false, "location": "Singapore" },
+    { "id": "preview-5", "title": "Train to Kuala Lumpur", "start": "2026-09-04T00:30:00.000Z", "end": "2026-09-04T05:00:00.000Z", "allDay": false, "location": "Woodlands Train Checkpoint" },
+    { "id": "preview-6", "title": "Kuala Lumpur", "start": "2026-09-04", "end": "2026-09-08", "allDay": true, "location": "Malaysia" },
+    { "id": "preview-7", "title": "Flight home", "start": "2026-09-08T06:40:00.000Z", "end": "2026-09-08T17:15:00.000Z", "allDay": false, "location": "Kuala Lumpur International Airport" }
+  ]
+}
