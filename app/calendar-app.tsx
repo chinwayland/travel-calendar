@@ -31,6 +31,7 @@ import {
 
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
+import { TripsView } from './trips-view';
 import {
   Dialog,
   DialogContent,
@@ -46,7 +47,7 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet';
 
-type CalendarView = 'day' | 'week' | 'month' | 'year';
+type CalendarView = 'day' | 'week' | 'month' | 'year' | 'trips';
 
 type TravelEvent = {
   id: string;
@@ -70,6 +71,7 @@ const viewNames: Record<CalendarView, string> = {
   week: 'timeGridWeek',
   month: 'dayGridMonth',
   year: 'multiMonthYear',
+  trips: 'dayGridMonth',
 };
 
 const reverseViewNames: Record<string, CalendarView> = {
@@ -84,7 +86,11 @@ const mobileSidebarQuery = '(max-width: 880px)';
 
 function isCalendarView(value: string | null): value is CalendarView {
   return (
-    value === 'day' || value === 'week' || value === 'month' || value === 'year'
+    value === 'day' ||
+    value === 'week' ||
+    value === 'month' ||
+    value === 'year' ||
+    value === 'trips'
   );
 }
 
@@ -278,6 +284,7 @@ function SidebarContents({
 export default function CalendarApp() {
   const calendarRef = useRef<FullCalendar>(null);
   const initializedRef = useRef(false);
+  const activeViewRef = useRef<CalendarView>('month');
   const historyModeRef = useRef<'push' | 'replace' | 'none'>('replace');
   const [data, setData] = useState<CalendarData | null>(null);
   const [loadError, setLoadError] = useState('');
@@ -353,6 +360,8 @@ export default function CalendarApp() {
     const requestedDate = validDate(params.get('date'));
     const nextView = isCalendarView(requestedView) ? requestedView : 'month';
 
+    activeViewRef.current = nextView;
+    setView(nextView);
     historyModeRef.current = 'none';
     if (requestedDate) api.gotoDate(requestedDate);
     api.changeView(viewNames[nextView]);
@@ -364,7 +373,7 @@ export default function CalendarApp() {
     initializedRef.current = true;
     const api = calendarRef.current?.getApi();
     if (api) {
-      const activeView = reverseViewNames[api.view.type] ?? 'month';
+      const activeView = activeViewRef.current;
       syncUrl(activeView, api.getDate());
     }
 
@@ -374,7 +383,10 @@ export default function CalendarApp() {
   }, [applyUrlState, syncUrl]);
 
   const handleDatesSet = (info: DatesSetArg) => {
-    const nextView = reverseViewNames[info.view.type] ?? 'month';
+    const nextView =
+      activeViewRef.current === 'trips'
+        ? 'trips'
+        : (reverseViewNames[info.view.type] ?? 'month');
     const date = info.view.calendar.getDate();
     setTitle(info.view.title);
     setView(nextView);
@@ -391,7 +403,11 @@ export default function CalendarApp() {
     const api = calendarRef.current?.getApi();
     if (!api) return;
     historyModeRef.current = 'push';
+    activeViewRef.current = nextView;
+    setView(nextView);
     api.changeView(viewNames[nextView], date);
+    syncUrl(nextView, api.getDate());
+    if (nextView !== 'trips') requestAnimationFrame(() => api.updateSize());
   };
 
   const selectDate = (date: Date) => {
@@ -487,7 +503,11 @@ export default function CalendarApp() {
             >
               <PanelLeft aria-hidden="true" />
             </Button>
-            <nav className="period-nav" aria-label="Calendar navigation">
+            <nav
+              className="period-nav"
+              aria-label="Calendar navigation"
+              style={view === 'trips' ? { visibility: 'hidden' } : undefined}
+            >
               <Button
                 variant="outline"
                 size="icon-lg"
@@ -511,12 +531,12 @@ export default function CalendarApp() {
           </div>
 
           <h1 className="period-title" aria-live="polite">
-            {title || 'Travel Calendar'}
+            {view === 'trips' ? 'Your Trips' : title || 'Travel Calendar'}
           </h1>
 
           <fieldset className="view-switcher">
             <legend className="sr-only">Calendar view</legend>
-            {(['day', 'week', 'month', 'year'] as CalendarView[]).map(
+            {(['day', 'week', 'month', 'year', 'trips'] as CalendarView[]).map(
               (item) => (
                 <button
                   key={item}
@@ -570,43 +590,53 @@ export default function CalendarApp() {
           {!data && !loadError && (
             <output className="calendar-loading">Loading itinerary…</output>
           )}
-          <FullCalendar
-            ref={calendarRef}
-            plugins={[
-              dayGridPlugin,
-              timeGridPlugin,
-              multiMonthPlugin,
-              interactionPlugin,
-            ]}
-            initialView="dayGridMonth"
-            headerToolbar={false}
-            height="100%"
-            firstDay={1}
-            nowIndicator
-            stickyHeaderDates
-            allDaySlot
-            dayMaxEvents={3}
-            moreLinkClick="popover"
-            navLinks={false}
-            multiMonthMaxColumns={4}
-            multiMonthMinWidth={210}
-            slotMinTime="00:00:00"
-            slotMaxTime="24:00:00"
-            slotDuration="01:00:00"
-            slotLabelInterval="01:00"
-            scrollTime="07:00:00"
-            events={data?.events ?? []}
-            datesSet={handleDatesSet}
-            dateClick={handleDateClick}
-            eventClick={handleEventClick}
-            eventDidMount={handleEventMount}
-            eventContent={eventContent}
-            eventTimeFormat={{
-              hour: 'numeric',
-              minute: '2-digit',
-              meridiem: 'short',
-            }}
-          />
+          {view === 'trips' && data && (
+            <TripsView
+              events={data.events}
+              timezone={timezone}
+              onShowEvent={showEvent}
+              onShowCalendar={(date) => changeView('day', date)}
+            />
+          )}
+          <div className="calendar-grid-host" hidden={view === 'trips'}>
+            <FullCalendar
+              ref={calendarRef}
+              plugins={[
+                dayGridPlugin,
+                timeGridPlugin,
+                multiMonthPlugin,
+                interactionPlugin,
+              ]}
+              initialView="dayGridMonth"
+              headerToolbar={false}
+              height="100%"
+              firstDay={1}
+              nowIndicator
+              stickyHeaderDates
+              allDaySlot
+              dayMaxEvents={3}
+              moreLinkClick="popover"
+              navLinks={false}
+              multiMonthMaxColumns={4}
+              multiMonthMinWidth={210}
+              slotMinTime="00:00:00"
+              slotMaxTime="24:00:00"
+              slotDuration="01:00:00"
+              slotLabelInterval="01:00"
+              scrollTime="07:00:00"
+              events={data?.events ?? []}
+              datesSet={handleDatesSet}
+              dateClick={handleDateClick}
+              eventClick={handleEventClick}
+              eventDidMount={handleEventMount}
+              eventContent={eventContent}
+              eventTimeFormat={{
+                hour: 'numeric',
+                minute: '2-digit',
+                meridiem: 'short',
+              }}
+            />
+          </div>
         </main>
       </div>
 

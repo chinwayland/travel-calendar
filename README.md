@@ -4,6 +4,8 @@
 
 A shareable, Apple Calendar-inspired web view of a private TripIt calendar feed. It supports Year, Month, Week, and Day views, adapts to phones and desktops, and displays event times in each visitor’s local timezone.
 
+The additional **Trips** view follows TripIt’s card-list and itinerary-timeline pattern. Browse upcoming or past trips, search titles and locations, and open a trip to see dated plans. All-day events provide the trip summaries; timed plans are grouped by their start date in the visitor’s timezone within each summary’s inclusive display dates. Because exact trip membership is absent from the sanitized feed, plans on overlapping dates can appear in multiple itineraries. **Other Plans** keeps timed events outside summary dates accessible.
+
 ## How it works
 
 The browser never receives the private TripIt feed URL. A GitHub Actions workflow downloads the feed using the encrypted `TRIPIT_ICAL_URL` repository secret, parses it at build time, removes private fields, and deploys a static site to GitHub Pages.
