@@ -60,6 +60,8 @@ Do not add a `CNAME` file to this source repository. The custom-domain configura
 
 GitHub may automatically disable scheduled workflows in a public repository after 60 days without repository activity. If updates stop, re-enable the workflow in the `waylandchin.com` repository’s **Actions** tab and run it manually once.
 
+An external Cloudflare scheduler is prepared to remove that inactivity dependency. It is staged without an active trigger pending a dedicated repository-scoped GitHub credential. The current GitHub schedule remains enabled until the replacement is tested. See [scheduler setup](scheduler/README.md).
+
 ## Security note
 
 A TripIt private feed URL is a bearer credential: anyone who has it can read the feed. If it has been posted anywhere unintended, reset the calendar-feed URL in TripIt and replace the GitHub Actions secret. Never commit the URL or an original `.ics` download.
