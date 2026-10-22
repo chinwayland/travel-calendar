@@ -2,6 +2,8 @@
 
 final result: passed
 
+Update, October 22, 2026: this report records the original visual implementation. Its date-based grouping limitation was subsequently resolved by extracting opaque trip membership keys from the private feed during sanitization. The app now follows exact TripIt ownership and no longer displays the overlap note described below. The Hangzhou regression has four plans (two train journeys and both DC Hotel endpoints), with Wanda Realm and Atour assigned to their respective Jinhua trips.
+
 Source visual truth: user screenshots at `/var/folders/22/zbcw_3z90ybc662c321ccdnc0000gn/T/TemporaryItems/NSIRD_screencaptureui_yH5Ggk/Screenshot 2026-10-09 at 9.09.12 PM.png` and `/var/folders/22/zbcw_3z90ybc662c321ccdnc0000gn/T/TemporaryItems/NSIRD_screencaptureui_Me1LSU/Screenshot 2026-10-09 at 9.09.21 PM.png`.
 
 Implementation: `http://localhost:3000/?view=trips`, tested with the already-public production calendar snapshot, without committing it.

@@ -40,10 +40,48 @@ function eventId(uid, occurrence) {
     .slice(0, 18);
 }
 
-function normalizeOccurrence(item, startDate, endDate, uid) {
+// TripIt's feed stores the owning trip link in DESCRIPTION. Retain only a
+// one-way grouping key; never include the source description, URL, or raw ID.
+function tripId(item) {
+  const description = String(
+    item.component.getFirstPropertyValue('description') ?? '',
+  );
+  const links = description.match(/https?:\/\/[^\s<>"'\\]+/gi) ?? [];
+  for (const link of links) {
+    let url;
+    try {
+      url = new URL(link);
+    } catch {
+      continue;
+    }
+    if (!['tripit.com', 'www.tripit.com'].includes(url.hostname.toLowerCase()))
+      continue;
+    const pathId = url.pathname.match(
+      /^\/trip\/show\/id\/([a-z0-9-]+)\/?$/i,
+    )?.[1];
+    const id =
+      pathId ??
+      (url.pathname === '/trip/show' ? url.searchParams.get('id') : null);
+    if (!id || !/^[a-z0-9-]+$/i.test(id)) continue;
+    return createHash('sha256')
+      .update(`tripit-trip\u0000${id.toLowerCase()}`)
+      .digest('hex')
+      .slice(0, 18);
+  }
+  return undefined;
+}
+
+function normalizeOccurrence(
+  item,
+  startDate,
+  endDate,
+  uid,
+  fallbackItem = item,
+) {
   const start = normalizedTime(startDate);
   const end = normalizedTime(endDate);
   if (!start || !end) return null;
+  const owner = tripId(item) ?? tripId(fallbackItem);
 
   return {
     id: eventId(uid, start),
@@ -52,6 +90,7 @@ function normalizeOccurrence(item, startDate, endDate, uid) {
     end,
     allDay: Boolean(startDate.isDate),
     location: cleanText(item.location, 240),
+    ...(owner ? { tripId: owner } : {}),
   };
 }
 
@@ -167,6 +206,7 @@ function calendarEvents(calendar) {
         details.startDate,
         details.endDate,
         uid,
+        master,
       );
       if (event) results.push(event);
     }

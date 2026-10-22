@@ -5,6 +5,7 @@ export type TravelEvent = {
   end: string;
   allDay: boolean;
   location: string;
+  tripId?: string;
 };
 
 export type Trip = TravelEvent & { plans: TravelEvent[] };
@@ -21,27 +22,28 @@ export function buildTrips(events: TravelEvent[]): {
 } {
   const summaries = events.filter((event) => event.allDay);
   const timed = events.filter((event) => !event.allDay);
-  const assigned = new Set<string>();
   const trips = summaries
-    .map((summary) => {
-      const plans = timed
-        .filter((plan) => {
-          const day = localDay(plan.start);
-          const included = day >= summary.start && day < summary.end;
-          if (included) assigned.add(plan.id);
-          return included;
-        })
-        .sort(
-          (a, b) =>
-            a.start.localeCompare(b.start) || a.title.localeCompare(b.title),
-        );
-      return { ...summary, plans };
-    })
+    .map((summary): Trip => ({ ...summary, plans: [] }))
     .sort(
       (a, b) =>
         a.start.localeCompare(b.start) || a.title.localeCompare(b.title),
     );
-  return { trips, otherPlans: timed.filter((plan) => !assigned.has(plan.id)) };
+  const owners = new Map<string, Trip>();
+  for (const trip of trips) {
+    if (trip.tripId && !owners.has(trip.tripId)) owners.set(trip.tripId, trip);
+  }
+  const otherPlans: TravelEvent[] = [];
+  for (const plan of timed) {
+    const owner = plan.tripId ? owners.get(plan.tripId) : undefined;
+    // Missing or orphaned membership stays accessible without inventing an
+    // owner from overlapping dates (or splitting the ends of a booking).
+    if (owner) owner.plans.push(plan);
+    else otherPlans.push(plan);
+  }
+  const byStart = (a: TravelEvent, b: TravelEvent) =>
+    a.start.localeCompare(b.start) || a.title.localeCompare(b.title);
+  for (const trip of trips) trip.plans.sort(byStart);
+  return { trips, otherPlans: otherPlans.sort(byStart) };
 }
 
 export function tripDates(trip: TravelEvent) {

@@ -201,10 +201,6 @@ export function TripsView({
               {selected.plans.length} plans · {timezone}
             </span>
           </div>
-          <p className="trip-grouping-note">
-            Plans within these trip dates. Plans on overlapping trip dates may
-            appear in more than one itinerary.
-          </p>
           {timeline}
         </>
       ) : (

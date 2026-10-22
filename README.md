@@ -4,7 +4,7 @@
 
 A shareable, Apple Calendar-inspired web view of a private TripIt calendar feed. It supports Year, Month, Week, and Day views, adapts to phones and desktops, and displays event times in each visitor’s local timezone.
 
-The additional **Trips** view follows TripIt’s card-list and itinerary-timeline pattern. Browse upcoming or past trips, search titles and locations, and open a trip to see dated plans. All-day events provide the trip summaries; timed plans are grouped by their start date in the visitor’s timezone within each summary’s inclusive display dates. Because exact trip membership is absent from the sanitized feed, plans on overlapping dates can appear in multiple itineraries. **Other Plans** keeps timed events outside summary dates accessible.
+The default **Trips** view follows TripIt’s card-list and itinerary-timeline pattern. Browse upcoming or past trips, search titles and locations, and open a trip to see dated plans. All-day events provide the trip summaries. Timed plans use TripIt’s actual trip membership, retained as an opaque hash of the owning trip identifier. Each plan appears in only one trip, so hotel check-in and check-out stay in their TripIt trip even on shared travel dates. **Other Plans** keeps plans with missing or unavailable trip membership accessible rather than guessing their owner from dates. Grouping does not change with the visitor’s timezone; displayed times still use their local timezone.
 
 ## How it works
 
@@ -16,6 +16,7 @@ Only these fields are published:
 - Start and end
 - All-day status
 - Location
+- Opaque event and trip grouping IDs
 
 The ICS `DESCRIPTION`, `GEO`, `URL`, and `UID` fields and the private feed URL are excluded. Event titles and locations are published as supplied by TripIt, so those fields should still be reviewed for anything you do not want to share. The resulting calendar is public to anyone who has the website address.
 

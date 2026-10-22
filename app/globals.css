@@ -478,20 +478,15 @@ a {
   display: flex;
   align-items: baseline;
   gap: 16px;
+  margin-bottom: 18px;
 }
 .trip-timeline-heading h2 {
   font-size: 18px;
   margin: 0;
 }
-.trip-timeline-heading span,
-.trip-grouping-note {
+.trip-timeline-heading span {
   font-size: 12px;
   color: var(--muted-foreground);
-}
-.trip-grouping-note {
-  margin: 10px 0 24px;
-  max-width: 650px;
-  line-height: 1.5;
 }
 .trip-timeline {
   max-width: 800px;

@@ -40,12 +40,18 @@ test('trip dates use exclusive ICS end dates, including DST and year boundaries'
   );
 });
 
-test('plans on overlapping dates remain visible, exclusive end and other plans are respected', () => {
+test('overlapping trips use explicit ownership instead of sharing plans by date', () => {
   const result = buildTrips([
-    event('a', '2026-10-07', '2026-10-11', true),
-    event('b', '2026-10-10', '2026-10-12', true),
-    event('plan', '2026-10-10T06:00:00Z', '2026-10-10T07:00:00Z'),
-    event('boundary', '2026-10-11T06:00:00Z', '2026-10-11T07:00:00Z'),
+    { ...event('a', '2026-10-07', '2026-10-11', true), tripId: 'trip-a' },
+    { ...event('b', '2026-10-10', '2026-10-12', true), tripId: 'trip-b' },
+    {
+      ...event('plan', '2026-10-10T06:00:00Z', '2026-10-10T07:00:00Z'),
+      tripId: 'trip-a',
+    },
+    {
+      ...event('boundary', '2026-10-11T06:00:00Z', '2026-10-11T07:00:00Z'),
+      tripId: 'trip-b',
+    },
     event('other', '2026-10-20T06:00:00Z', '2026-10-20T07:00:00Z'),
   ]);
   assert.deepEqual(
@@ -54,12 +60,90 @@ test('plans on overlapping dates remain visible, exclusive end and other plans a
   );
   assert.deepEqual(
     result.trips[1].plans.map((plan) => plan.id),
-    ['plan', 'boundary'],
+    ['boundary'],
   );
   assert.deepEqual(
     result.otherPlans.map((plan) => plan.id),
     ['other'],
   );
+});
+
+test('Hangzhou Oct 23–25 keeps both hotel endpoints together and excludes adjacent Jinhua bookings', () => {
+  const summary = (id, start, end) => ({
+    ...event(id, start, end, true),
+    tripId: id,
+  });
+  const plan = (id, day, tripId) => ({
+    ...event(id, `${day}T07:00:00Z`, `${day}T08:00:00Z`),
+    tripId,
+  });
+  const events = [
+    summary('jinhua-before', '2026-10-18', '2026-10-24'),
+    summary('hangzhou', '2026-10-23', '2026-10-26'),
+    summary('jinhua-after', '2026-10-25', '2026-10-31'),
+    plan('Wanda check-in', '2026-10-18', 'jinhua-before'),
+    plan('Wanda check-out', '2026-10-23', 'jinhua-before'),
+    plan('DC check-in', '2026-10-23', 'hangzhou'),
+    plan('DC check-out', '2026-10-25', 'hangzhou'),
+    plan('Atour check-in', '2026-10-25', 'jinhua-after'),
+    plan('Atour check-out', '2026-10-30', 'jinhua-after'),
+  ];
+  const result = buildTrips(events);
+  assert.deepEqual(
+    result.trips.map((trip) => trip.plans.map((item) => item.id)),
+    [
+      ['Wanda check-in', 'Wanda check-out'],
+      ['DC check-in', 'DC check-out'],
+      ['Atour check-in', 'Atour check-out'],
+    ],
+  );
+  assert.equal(result.otherPlans.length, 0);
+  assert.equal(
+    new Set(result.trips.flatMap((trip) => trip.plans.map((item) => item.id)))
+      .size,
+    6,
+  );
+  process.env.TZ = 'America/Los_Angeles';
+  try {
+    assert.deepEqual(buildTrips(events), result);
+  } finally {
+    process.env.TZ = 'UTC';
+  }
+});
+
+test('ownership is respected outside trip dates; missing and orphaned owners remain unassigned', () => {
+  const result = buildTrips([
+    { ...event('trip', '2026-10-23', '2026-10-26', true), tripId: 'trip' },
+    {
+      ...event('late-checkout', '2026-10-26T07:00:00Z', '2026-10-26T08:00:00Z'),
+      tripId: 'trip',
+    },
+    event('missing', '2026-10-24T07:00:00Z', '2026-10-24T08:00:00Z'),
+    {
+      ...event('orphan', '2026-10-24T09:00:00Z', '2026-10-24T10:00:00Z'),
+      tripId: 'unavailable',
+    },
+  ]);
+  assert.deepEqual(
+    result.trips[0].plans.map((item) => item.id),
+    ['late-checkout'],
+  );
+  assert.deepEqual(
+    result.otherPlans.map((item) => item.id),
+    ['missing', 'orphan'],
+  );
+});
+
+test('duplicate summaries never duplicate a plan across trips', () => {
+  const result = buildTrips([
+    { ...event('a', '2026-10-23', '2026-10-26', true), tripId: 'same' },
+    { ...event('b', '2026-10-23', '2026-10-26', true), tripId: 'same' },
+    {
+      ...event('plan', '2026-10-24T07:00:00Z', '2026-10-24T08:00:00Z'),
+      tripId: 'same',
+    },
+  ]);
+  assert.equal(result.trips.flatMap((trip) => trip.plans).length, 1);
 });
 
 test('date-only summaries never shift with timezone and empty feeds stay empty', () => {

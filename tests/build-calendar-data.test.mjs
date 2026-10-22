@@ -8,6 +8,70 @@ import test from 'node:test';
 
 const run = promisify(execFile);
 
+test('extracts consistent opaque TripIt ownership without publishing descriptions or raw IDs', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'travel-calendar-membership-'));
+  const input = join(dir, 'calendar.ics');
+  const output = join(dir, 'calendar.json');
+  const year = new Date().getUTCFullYear();
+  const item = (uid, description, allDay = false) => `BEGIN:VEVENT
+UID:${uid}
+DTSTAMP:${year}0101T000000Z
+${allDay ? `DTSTART;VALUE=DATE:${year}1023\nDTEND;VALUE=DATE:${year}1026` : `DTSTART:${year}1023T070000Z\nDTEND:${year}1023T080000Z`}
+SUMMARY:${uid}
+DESCRIPTION:${description}
+END:VEVENT`;
+  const rawId = 'private-trip-987654321';
+  const source = `BEGIN:VCALENDAR
+VERSION:2.0
+${item('summary', `Private notes https://www.tripit.com/trip/show?id=${rawId}`, true)}
+${item('checkin', `https://www.tripit.com/trip/show/id/${rawId}`)}
+${item('checkout', `https://www.tripit.com/trip/show/id/${rawId}`)}
+${item('different', 'https://tripit.com/trip/show?id=another-trip')}
+${item('untrusted', `https://www.tripit.com.evil.example/trip/show?id=${rawId}`)}
+${item('unknown', 'Private notes without a trip link')}
+END:VCALENDAR`;
+  try {
+    await writeFile(input, source);
+    await run(process.execPath, [
+      resolve('scripts/build-calendar-data.mjs'),
+      '--input',
+      input,
+      '--output',
+      output,
+    ]);
+    const raw = await readFile(output, 'utf8');
+    const { events } = JSON.parse(raw);
+    const byTitle = new Map(events.map((event) => [event.title, event]));
+    const owner = byTitle.get('summary').tripId;
+    assert.match(owner, /^[a-f0-9]{18}$/);
+    assert.equal(byTitle.get('checkin').tripId, owner);
+    assert.equal(byTitle.get('checkout').tripId, owner);
+    assert.notEqual(byTitle.get('different').tripId, owner);
+    assert.equal(byTitle.get('untrusted').tripId, undefined);
+    assert.equal(byTitle.get('unknown').tripId, undefined);
+    assert(!raw.includes(rawId));
+    assert(!raw.includes('https://'));
+    assert(!raw.includes('Private notes'));
+    assert(
+      events.every((event) =>
+        Object.keys(event).every((key) =>
+          [
+            'id',
+            'title',
+            'start',
+            'end',
+            'allDay',
+            'location',
+            'tripId',
+          ].includes(key),
+        ),
+      ),
+    );
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
 function icalTimestamp(date) {
   return date
     .toISOString()
