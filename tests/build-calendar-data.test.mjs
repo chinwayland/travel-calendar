@@ -11,7 +11,7 @@ const run = promisify(execFile);
 test('extracts consistent opaque TripIt ownership without publishing descriptions or raw IDs', async () => {
   const dir = await mkdtemp(join(tmpdir(), 'travel-calendar-membership-'));
   const input = join(dir, 'calendar.ics');
-  const output = join(dir, 'calendar.json');
+  const output = join(dir, 'calendar-data.json');
   const year = new Date().getUTCFullYear();
   const item = (uid, description, allDay = false) => `BEGIN:VEVENT
 UID:${uid}
@@ -40,6 +40,10 @@ END:VCALENDAR`;
       output,
     ]);
     const raw = await readFile(output, 'utf8');
+    assert.equal(
+      await readFile(join(dir, 'calendar-data-v2.json'), 'utf8'),
+      raw,
+    );
     const { events } = JSON.parse(raw);
     const byTitle = new Map(events.map((event) => [event.title, event]));
     const owner = byTitle.get('summary').tripId;

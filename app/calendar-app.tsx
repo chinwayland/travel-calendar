@@ -312,7 +312,11 @@ export default function CalendarApp() {
 
   useEffect(() => {
     let active = true;
-    fetch(basePath + '/calendar-data.json', { cache: 'no-store' })
+    // Use a new cache key when the feed schema gains trip membership so an
+    // older CDN response cannot make the freshly deployed itineraries empty.
+    fetch(basePath + '/calendar-data-v2.json', {
+      cache: 'no-store',
+    })
       .then((response) => {
         if (!response.ok) throw new Error('Calendar data is unavailable');
         return response.json();

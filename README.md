@@ -10,6 +10,8 @@ The default **Trips** view follows TripIt’s card-list and itinerary-timeline p
 
 The browser never receives the private TripIt feed URL. A GitHub Actions workflow downloads the feed using the encrypted `TRIPIT_ICAL_URL` repository secret, parses it at build time, removes private fields, and deploys a static site to GitHub Pages.
 
+The sanitizer writes matching `calendar-data.json` and `calendar-data-v2.json` files when building the production endpoint. The app loads the versioned filename so an older GitHub Pages cache cannot omit the newly required trip membership. Both checked-in files contain only the same fictional sample itinerary.
+
 Only these fields are published:
 
 - Event title

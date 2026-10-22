@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
-import { dirname, resolve } from 'node:path';
+import { basename, dirname, resolve } from 'node:path';
 import process from 'node:process';
 
 import ICAL from 'ical.js';
@@ -242,5 +242,15 @@ const payload = {
 };
 
 await mkdir(dirname(outputPath), { recursive: true });
-await writeFile(outputPath, `${JSON.stringify(payload, null, 2)}\n`, 'utf8');
+const serialized = `${JSON.stringify(payload, null, 2)}\n`;
+await writeFile(outputPath, serialized, 'utf8');
+// Keep the old endpoint working for cached clients while the new interface
+// uses a distinct filename that cannot serve a pre-membership CDN response.
+if (basename(outputPath) === 'calendar-data.json') {
+  await writeFile(
+    resolve(dirname(outputPath), 'calendar-data-v2.json'),
+    serialized,
+    'utf8',
+  );
+}
 console.log(`Prepared ${events.length} sanitized calendar events.`);
