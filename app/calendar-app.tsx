@@ -284,12 +284,12 @@ function SidebarContents({
 export default function CalendarApp() {
   const calendarRef = useRef<FullCalendar>(null);
   const initializedRef = useRef(false);
-  const activeViewRef = useRef<CalendarView>('month');
+  const activeViewRef = useRef<CalendarView>('trips');
   const historyModeRef = useRef<'push' | 'replace' | 'none'>('replace');
   const [data, setData] = useState<CalendarData | null>(null);
   const [loadError, setLoadError] = useState('');
   const [title, setTitle] = useState('');
-  const [view, setView] = useState<CalendarView>('month');
+  const [view, setView] = useState<CalendarView>('trips');
   const [currentDate, setCurrentDate] = useState(() => new Date());
   const [selectedEvent, setSelectedEvent] = useState<TravelEvent | null>(null);
   const [sidebarVisible, setSidebarVisible] = useState(true);
@@ -358,7 +358,7 @@ export default function CalendarApp() {
     const params = new URLSearchParams(window.location.search);
     const requestedView = params.get('view');
     const requestedDate = validDate(params.get('date'));
-    const nextView = isCalendarView(requestedView) ? requestedView : 'month';
+    const nextView = isCalendarView(requestedView) ? requestedView : 'trips';
 
     activeViewRef.current = nextView;
     setView(nextView);
@@ -536,7 +536,7 @@ export default function CalendarApp() {
 
           <fieldset className="view-switcher">
             <legend className="sr-only">Calendar view</legend>
-            {(['day', 'week', 'month', 'year', 'trips'] as CalendarView[]).map(
+            {(['trips', 'day', 'week', 'month', 'year'] as CalendarView[]).map(
               (item) => (
                 <button
                   key={item}
