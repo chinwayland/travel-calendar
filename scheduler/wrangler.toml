@@ -4,7 +4,9 @@ compatibility_date = "2026-10-22"
 workers_dev = false
 preview_urls = false
 
-# Staged without a trigger until the dedicated repository-scoped GitHub
-# credential has been installed and a real dispatch verified.
+[secrets]
+required = ["GITHUB_ACTIONS_TOKEN"]
+
+# Production refresh: every 15 minutes, away from the top of the hour.
 [triggers]
-crons = []
+crons = ["7,22,37,52 * * * *"]

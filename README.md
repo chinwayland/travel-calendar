@@ -50,7 +50,7 @@ The production workflow:
 1. Reads `TRIPIT_ICAL_URL` from the `waylandchin.com` repository’s encrypted Actions secrets.
 2. Downloads and sanitizes the feed in the GitHub Actions runner.
 3. Builds this static application and installs it at `/travel-calendar/` in the personal-site artifact.
-4. Deploys the combined artifact to GitHub Pages every 15 minutes and on manual runs.
+4. Deploys the combined artifact to GitHub Pages when Cloudflare triggers it every 15 minutes, on website changes, and on manual runs.
 
 The live calendar is available at:
 
@@ -58,9 +58,7 @@ The live calendar is available at:
 
 Do not add a `CNAME` file to this source repository. The custom-domain configuration remains in the personal-site repository. This repository’s workflow is retained for testing and source-repository Pages deployments on pushes or manual runs; the scheduled production refresh is owned only by `waylandchin.com`.
 
-GitHub may automatically disable scheduled workflows in a public repository after 60 days without repository activity. If updates stop, re-enable the workflow in the `waylandchin.com` repository’s **Actions** tab and run it manually once.
-
-An external Cloudflare scheduler is prepared to remove that inactivity dependency. It is staged without an active trigger pending a dedicated repository-scoped GitHub credential. The current GitHub schedule remains enabled until the replacement is tested. See [scheduler setup](scheduler/README.md).
+The external Cloudflare scheduler is active and replaces GitHub’s native cron trigger, removing the 60-day repository-inactivity dependency. It uses a dedicated repository-scoped Actions token stored as a Cloudflare secret. An expired or revoked token must be replaced. See [scheduler operation and setup](scheduler/README.md).
 
 ## Security note
 

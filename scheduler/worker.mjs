@@ -11,7 +11,9 @@ export async function refresh(env, request = fetch) {
   async function github(url, method = 'GET', body) {
     const response = await request(url, {
       method,
-      redirect: 'error',
+      // Workers supports manual/follow, not Node's redirect:'error'. Treat
+      // redirects as failed responses so credentials never follow a redirect.
+      redirect: 'manual',
       headers: {
         Accept: 'application/vnd.github+json',
         Authorization: `Bearer ${env.GITHUB_ACTIONS_TOKEN}`,

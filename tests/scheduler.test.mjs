@@ -16,7 +16,7 @@ function api(replies) {
           'https://api.github.com/repos/chinwayland/waylandchin.com/actions/workflows/deploy-pages.yml',
         ),
       );
-      assert.equal(options.redirect, 'error');
+      assert.equal(options.redirect, 'manual');
       assert.equal(
         options.headers.Authorization,
         `Bearer ${env.GITHUB_ACTIONS_TOKEN}`,
@@ -81,4 +81,14 @@ test('fails clearly without exposing tokens or response bodies', async () => {
   await assert.rejects(refresh(env, fake.request), {
     message: 'GitHub GET failed with HTTP 401',
   });
+  const redirect = api([
+    new Response(null, {
+      status: 302,
+      headers: { Location: 'https://example.com' },
+    }),
+  ]);
+  await assert.rejects(refresh(env, redirect.request), {
+    message: 'GitHub GET failed with HTTP 302',
+  });
+  assert.equal(redirect.calls.length, 1);
 });
