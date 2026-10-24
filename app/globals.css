@@ -474,6 +474,17 @@ a {
   object-fit: cover;
   border-radius: 4px;
 }
+.trip-photo-detail {
+  width: 210px;
+  flex-shrink: 0;
+}
+.trip-photo-credit {
+  display: block;
+  margin-top: 6px;
+  font-size: 10px;
+  color: var(--muted-foreground);
+  overflow-wrap: anywhere;
+}
 .trip-timeline-heading {
   display: flex;
   align-items: baseline;
@@ -1021,6 +1032,9 @@ a {
   .trip-detail-image {
     width: 100px;
     height: 120px;
+  }
+  .trip-photo-detail {
+    width: 100px;
   }
   .trip-detail-header {
     gap: 12px;

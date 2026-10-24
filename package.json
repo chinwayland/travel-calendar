@@ -7,7 +7,7 @@
   },
   "scripts": {
     "dev": "vinext dev",
-    "build": "vinext build",
+    "build": "node scripts/build-destination-photos.mjs && vinext build",
     "calendar:build": "node scripts/build-calendar-data.mjs",
     "pages:prepare": "node scripts/prepare-pages-output.mjs",
     "start": "wrangler dev --config dist/server/wrangler.json",

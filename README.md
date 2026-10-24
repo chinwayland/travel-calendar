@@ -77,3 +77,9 @@ NEXT_PUBLIC_BASE_PATH=/travel-calendar pnpm pages:prepare
 ```
 
 `pages:prepare` verifies every generated asset referenced by the HTML and creates the `.nojekyll` marker required for GitHub Pages.
+
+# Destination photos
+
+Trip cards and itineraries use locally hosted, freely licensed destination photos from Wikimedia Commons. `scripts/build-destination-photos.mjs` runs before each production build, keeps the checked-in selections, and looks up photos for new trip titles. It uses geographically identified Wikipedia articles rather than unrestricted image search. Known ambiguous destinations are mapped in `scripts/destination-overrides.json` (for example, Hengdian to Hengdian World Studios). Trip-name matching intentionally takes priority over location because TripIt sometimes labels small towns with their parent city.
+
+Photos and attribution are stored in `public/destination-photos/`; the itinerary links to the original Commons file with photographer, license, and cropping notice. Existing destinations require no image-service calls. New photos discovered during a build are included in that release; commit their assets and index to retain the selection across clean builds. Missing or failed photos use the original suitcase without preventing feed updates. No API key or paid image service is required. Multi-city trips currently use one representative destination, specified by the override file.

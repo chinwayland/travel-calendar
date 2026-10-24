@@ -19,6 +19,33 @@ import { buildTrips, localDay, tripDates } from './trip-model';
 import type { TravelEvent } from './trip-model';
 
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? '';
+type DestinationPhoto = {
+  src: string;
+  place: string;
+  author: string;
+  license: string;
+  source: string;
+};
+
+function TripPhoto({
+  photo,
+  detail = false,
+}: {
+  photo?: DestinationPhoto;
+  detail?: boolean;
+}) {
+  const [failedSrc, setFailedSrc] = useState<string>();
+  const failed = Boolean(photo && failedSrc === photo.src);
+  return (
+    <img
+      src={`${basePath}${photo && !failed ? photo.src : '/trip-suitcase.png'}`}
+      alt={photo && !failed ? photo.place : ''}
+      loading={detail ? 'eager' : 'lazy'}
+      className={detail ? 'trip-detail-image' : undefined}
+      onError={() => setFailedSrc(photo?.src)}
+    />
+  );
+}
 
 function PlanIcon({ title }: { title: string }) {
   const Icon = /check.in|check.out|lodging|hotel/i.test(title)
@@ -54,6 +81,17 @@ export function TripsView({
   onShowCalendar: (date: Date) => void;
 }) {
   const { trips, otherPlans } = useMemo(() => buildTrips(events), [events]);
+  const [photos, setPhotos] = useState<Record<string, DestinationPhoto>>({});
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch(`${basePath}/destination-photos/index.json`, {
+      signal: controller.signal,
+    })
+      .then((response) => (response.ok ? response.json() : {}))
+      .then(setPhotos)
+      .catch(() => {});
+    return () => controller.abort();
+  }, []);
   const [filter, setFilter] = useState<'upcoming' | 'past' | 'other'>(
     'upcoming',
   );
@@ -189,11 +227,28 @@ export function TripsView({
                 View in calendar
               </button>
             </div>
-            <img
-              src={`${basePath}/trip-suitcase.png`}
-              alt=""
-              className="trip-detail-image"
-            />
+            <div className="trip-photo-detail">
+              <TripPhoto
+                photo={photos[`${selected.title}|${selected.location}`]}
+                detail
+              />
+              {photos[`${selected.title}|${selected.location}`] &&
+                (() => {
+                  const photo =
+                    photos[`${selected.title}|${selected.location}`];
+                  return (
+                    <a
+                      className="trip-photo-credit"
+                      href={photo.source}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Photo: {photo.author || 'Wikimedia Commons'} ·{' '}
+                      {photo.license} · cropped
+                    </a>
+                  );
+                })()}
+            </div>
           </section>
           <div className="trip-timeline-heading">
             <h2>Itinerary</h2>
@@ -282,11 +337,7 @@ export function TripsView({
                       <ArrowRight aria-hidden="true" />
                     </span>
                   </div>
-                  <img
-                    src={`${basePath}/trip-suitcase.png`}
-                    alt=""
-                    loading="lazy"
-                  />
+                  <TripPhoto photo={photos[`${trip.title}|${trip.location}`]} />
                 </button>
               ))}
               {!visibleTrips.length && (
